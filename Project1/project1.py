@@ -2,7 +2,7 @@ from string import punctuation, digits
 import numpy as np
 import random
 
-
+from IPython import embed
 
 #==============================================================================
 #===  PART I  =================================================================
@@ -61,7 +61,7 @@ def hinge_loss_full(feature_matrix, labels, theta, theta_0):
 		Returns:
 				the hinge loss, as a float, associated with the given dataset and
 				parameters.  This number should be the average hinge loss across all of
-		
+
 		y = np.dot(feature_matrix, theta) + theta_0
 		losses = np.maximum(0.0, 1 - y * labels)
 		return np.mean(losses)
@@ -74,7 +74,7 @@ def hinge_loss_full(feature_matrix, labels, theta, theta_0):
 		# since Python lists and loops are slow.
 		#
 		return np.mean([hinge_loss_single(feature_vector, label, theta, theta_0)
-		                 for (feature_vector, label) in zip(feature_matrix, labels)])
+										 for (feature_vector, label) in zip(feature_matrix, labels)])
 
 
 
@@ -101,7 +101,16 @@ def perceptron_single_step_update(
 				the updated offset parameter `theta_0` as a floating point number
 		"""
 		# Your code here
-		raise NotImplementedError
+
+		theta = current_theta.copy()
+		theta_0 = current_theta_0
+		y_hat = label * (np.sum(feature_vector * current_theta) + current_theta_0)
+		
+		if y_hat <= 0.:
+			theta += (feature_vector * label)
+			theta_0 += label
+
+		return (theta, theta_0)
 
 
 
@@ -127,45 +136,54 @@ def perceptron(feature_matrix, labels, T):
 				the offset parameter `theta_0` as a floating point number
 						(found also after T iterations through the feature matrix).
 		"""
-		# Your code here
-		raise NotImplementedError
+		
+		n = feature_matrix.shape[0]
+		m = feature_matrix.shape[1]
+		# initialize vector 
+		theta, theta_0  = np.zeros((m, )), 0
+
 		for t in range(T):
-				for i in get_order(nsamples):
-						# Your code here
-						raise NotImplementedError
-		# Your code here
-		raise NotImplementedError
+			for i in get_order(n):
+				feature_vector = feature_matrix[i,:]
+				label = labels[i]
+				theta, theta_0 = perceptron_single_step_update(feature_vector, label, theta, theta_0)
 
-
+		return(theta, theta_0)
+		
 
 def average_perceptron(feature_matrix, labels, T):
 		"""
-		Runs the average perceptron algorithm on a given dataset.  Runs `T`
-		iterations through the dataset (we do not stop early) and therefore
-		averages over `T` many parameter values.
-
+		Runs the average perceptron algorithm on a given set of data. Runs T
+		iterations through the data set, there is no need to worry about
+		stopping early.
 		NOTE: Please use the previously implemented functions when applicable.
 		Do not copy paste code from previous parts.
-
-		NOTE: It is more difficult to keep a running average than to sum and
-		divide.
-
+		NOTE: Iterate the data matrix by the orders returned by get_order(feature_matrix.shape[0])
 		Args:
-				`feature_matrix` -  A numpy matrix describing the given data. Each row
+				feature_matrix -  A numpy matrix describing the given data. Each row
 						represents a single data point.
-				`labels` - A numpy array where the kth element of the array is the
+				labels - A numpy array where the kth element of the array is the
 						correct classification of the kth row of the feature matrix.
-				`T` - An integer indicating how many times the perceptron algorithm
+				T - An integer indicating how many times the perceptron algorithm
 						should iterate through the feature matrix.
-
-		Returns a tuple containing two values:
-				the average feature-coefficient parameter `theta` as a numpy array
-						(averaged over T iterations through the feature matrix)
-				the average offset parameter `theta_0` as a floating point number
-						(averaged also over T iterations through the feature matrix).
+		Returns: A tuple where the first element is a numpy array with the value of
+		the average theta, the linear classification parameter, found after T
+		iterations through the feature matrix and the second element is a real
+		number with the value of the average theta_0, the offset classification
+		parameter, found after T iterations through the feature matrix.
+		Hint: It is difficult to keep a running average; however, it is simple to
+		find a sum and divide.
 		"""
-		# Your code here
-		raise NotImplementedError
+		n = feature_matrix.shape[0]
+		m = feature_matrix.shape[1]
+		theta, theta_0 = np.zeros((m,)), 0
+		theta_sum, theta_0_sum = np.zeros((m,)), 0
+		for t in range(T):
+				for i in get_order(n):
+						theta, theta_0 = perceptron_single_step_update(feature_matrix[i,:], labels[i], theta, theta_0)
+						theta_sum, theta_0_sum = theta_sum + theta, theta_0_sum + theta_0
+		nsamples = T * n
+		return theta_sum / nsamples, theta_0_sum / nsamples
 
 
 def pegasos_single_step_update(
