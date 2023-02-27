@@ -61,19 +61,20 @@ def hinge_loss_full(feature_matrix, labels, theta, theta_0):
 		Returns:
 				the hinge loss, as a float, associated with the given dataset and
 				parameters.  This number should be the average hinge loss across all of
-		"""
-
+		
 		y = np.dot(feature_matrix, theta) + theta_0
 		losses = np.maximum(0.0, 1 - y * labels)
 		return np.mean(losses)
+		"""
+
+
 		#
 		# NOTE: the above gives the same result as the following line.  However, we
 		# prefer to avoid doing linear algebra and other iteration in pure Python,
 		# since Python lists and loops are slow.
 		#
-		# return np.mean([hinge_loss_single(feature_vector, label, theta, theta_0)
-		#                 for (feature_vector, label) in zip(feature_matrix, labels)])
-		#
+		return np.mean([hinge_loss_single(feature_vector, label, theta, theta_0)
+		                 for (feature_vector, label) in zip(feature_matrix, labels)])
 
 
 
