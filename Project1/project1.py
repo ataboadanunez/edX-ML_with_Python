@@ -179,9 +179,9 @@ def average_perceptron(feature_matrix, labels, T):
 		theta, theta_0 = np.zeros((m,)), 0
 		theta_sum, theta_0_sum = np.zeros((m,)), 0
 		for t in range(T):
-				for i in get_order(n):
-						theta, theta_0 = perceptron_single_step_update(feature_matrix[i,:], labels[i], theta, theta_0)
-						theta_sum, theta_0_sum = theta_sum + theta, theta_0_sum + theta_0
+			for i in get_order(n):
+				theta, theta_0 = perceptron_single_step_update(feature_matrix[i,:], labels[i], theta, theta_0)
+				theta_sum, theta_0_sum = theta_sum + theta, theta_0_sum + theta_0
 		nsamples = T * n
 		return theta_sum / nsamples, theta_0_sum / nsamples
 
@@ -213,10 +213,16 @@ def pegasos_single_step_update(
 				real valued number with the value of theta_0 after the old updated has
 				completed.
 		"""
-		# Your code here
-		raise NotImplementedError
+		
 
+		if label * (np.sum(feature_vector * theta) + theta_0) <= 1:
+			up_theta = theta * (1 - eta*L) + eta * label * feature_vector 
+			up_theta_0 = theta_0 + eta * label
+		else:
+			up_theta = (1 - eta*L) * theta
+			up_theta_0 = theta_0
 
+		return (up_theta, up_theta_0)
 
 def pegasos(feature_matrix, labels, T, L):
 		"""
@@ -245,8 +251,25 @@ def pegasos(feature_matrix, labels, T, L):
 				the value of the theta_0, the offset classification parameter, found
 				after T iterations through the feature matrix.
 		"""
-		# Your code here
-		raise NotImplementedError
+		
+		n = feature_matrix.shape[0]
+		m = feature_matrix.shape[1]
+		theta, theta_0 = np.zeros((m,)), 0
+
+		rate = 1
+		for t in range(T):
+			for i in get_order(n):
+				eta = 1. / np.sqrt(rate)
+				feature_vector = feature_matrix[i, :]
+				label = labels[i]
+
+				theta, theta_0 = pegasos_single_step_update(feature_vector, label, L, eta, theta, theta_0)
+				# increase rate (1 to n*T)
+				rate += 1
+
+		return(theta, theta_0)
+
+
 
 
 
@@ -282,8 +305,8 @@ def classify(feature_matrix, theta, theta_0):
 				given theta and theta_0. If a prediction is GREATER THAN zero, it
 				should be considered a positive classification.
 		"""
-		# Your code here
-		raise NotImplementedError
+		
+		return ((np.sum(feature_matrix*theta, axis=1) + theta_0) >= 0)*2 - 1
 
 
 def classifier_accuracy(
@@ -320,7 +343,14 @@ def classifier_accuracy(
 				accuracy of the trained classifier on the validation data.
 		"""
 		# Your code here
-		raise NotImplementedError
+		
+		theta, theta_0 = classifier(train_feature_matrix, train_labels, **kwargs)
+		train_predict_labels = classify(train_feature_matrix, theta, theta_0)
+		val_predict_labels = classify(val_feature_matrix, theta, theta_0)
+		train_accuracy = accuracy(train_predict_labels, train_labels)
+		val_accuracy = accuracy(val_predict_labels, val_labels)
+
+		return (train_accuracy, val_accuracy)
 
 
 
@@ -351,21 +381,21 @@ def bag_of_words(texts, remove_stopword=False):
 				integer `index`.
 		"""
 		# Your code here
-		raise NotImplementedError
-
+		#raise NotImplementedError
+		stopwords = np.loadtxt('stopwords.txt', dtype=str)
+		remove = {"he":1, "is":2, "on":3, "the":4, "there":5, "to":6}
 		indices_by_word = {}  # maps word to unique index
 		for text in texts:
 				word_list = extract_words(text)
 				for word in word_list:
-						if word in indices_by_word: continue
-						if word in stopword: continue
+					if word not in indices_by_word and word not in stopwords:
 						indices_by_word[word] = len(indices_by_word)
 
 		return indices_by_word
 
 
 
-def extract_bow_feature_vectors(reviews, indices_by_word, binarize=True):
+def extract_bow_feature_vectors(reviews, indices_by_word, binarize=False):
 		"""
 		Args:
 				`reviews` - a list of natural language strings
@@ -376,14 +406,14 @@ def extract_bow_feature_vectors(reviews, indices_by_word, binarize=True):
 				in the dictionary.
 		"""
 		# Your code here
-		raise NotImplementedError
+		# raise NotImplementedError
 
 		feature_matrix = np.zeros([len(reviews), len(indices_by_word)], dtype=np.float64)
 		for i, text in enumerate(reviews):
 				word_list = extract_words(text)
 				for word in word_list:
 						if word not in indices_by_word: continue
-						feature_matrix[i, indices_by_word[word]] += 1
+						feature_matrix[i, indices_by_word[word]] = 1
 		if binarize:
 				# Your code here
 				raise NotImplementedError
